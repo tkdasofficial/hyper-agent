@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { SessionProvider, useSession } from '@/lib/session-context';
 import { AuthProvider } from '@/lib/auth-context';
 import { Header } from '@/components/Header';
@@ -9,9 +10,18 @@ import { UpgradeModal } from '@/components/UpgradeModal';
 import { AuthModal } from '@/components/AuthModal';
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { upgradeModalOpen, setUpgradeModalOpen } = useSession();
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
+
+  const isStandalone =
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/upgrade') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password');
 
   const handleToggleSidebar = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -32,11 +42,13 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
       {/* Main Workspace Body: Sidebar + Routed Page Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar
-          isOpen={desktopSidebarOpen}
-          mobileOpen={mobileSidebarOpen}
-          onCloseMobile={() => setMobileSidebarOpen(false)}
-        />
+        {!isStandalone && (
+          <Sidebar
+            isOpen={desktopSidebarOpen}
+            mobileOpen={mobileSidebarOpen}
+            onCloseMobile={() => setMobileSidebarOpen(false)}
+          />
+        )}
 
         <main
           id="main-workspace-scroll-area"

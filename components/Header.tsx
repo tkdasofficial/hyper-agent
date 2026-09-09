@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Menu,
   Crown,
@@ -13,6 +13,7 @@ import {
   FileText,
   LogOut,
   ChevronDown,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -27,10 +28,29 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSidebar,
   onOpenUpgrade,
 }) => {
+  const router = useRouter();
   const pathname = usePathname();
   const { user, openAuthModal, signOut } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isSubpage = pathname !== '/';
+
+  const hideHamburger =
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/upgrade') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password');
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
 
   // Close dropdown on click outside or escape key
   useEffect(() => {
@@ -59,13 +79,18 @@ export const Header: React.FC<HeaderProps> = ({
     if (pathname.startsWith('/library')) return 'Library';
     if (pathname.startsWith('/workflows')) return 'Workflows';
     if (pathname.startsWith('/integrations')) return 'Integrations';
-    if (pathname.startsWith('/upgrade')) return 'Upgrade Plan';
+    if (pathname.startsWith('/upgrade')) return 'Plans & Pricing';
     if (pathname.startsWith('/privacy')) return 'Privacy Policy';
     if (pathname.startsWith('/terms')) return 'Terms of Service';
     if (pathname.startsWith('/settings')) return 'Settings';
     if (pathname.startsWith('/login')) return 'Sign In';
     if (pathname.startsWith('/signup')) return 'Create Account';
     if (pathname.startsWith('/forgot-password')) return 'Reset Password';
+
+    const segment = pathname.split('/').filter(Boolean)[0];
+    if (segment) {
+      return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
+    }
     return 'Hyper Agent';
   };
 
@@ -79,19 +104,39 @@ export const Header: React.FC<HeaderProps> = ({
       id="hyper-agent-header"
       className="h-14 border-b border-neutral-800 bg-[#09090b]/95 backdrop-blur-md sticky top-0 z-30 px-4 flex items-center justify-between transition-colors"
     >
-      {/* Left section: Hamburger & Dynamic Page Name */}
-      <div className="flex items-center gap-3">
-        <button
-          id="btn-hamburger-sidebar"
-          onClick={onToggleSidebar}
-          aria-label="Toggle sidebar navigation"
-          className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors focus:outline-none cursor-pointer"
-          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          <Menu className="w-4 h-4" />
-        </button>
+      {/* Left section: Dynamic Back Button, Sidebar Toggle & Page Title */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {isSubpage ? (
+          <button
+            id="btn-header-back"
+            type="button"
+            onClick={handleBack}
+            aria-label="Go back"
+            className="p-1.5 -ml-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors focus:outline-none cursor-pointer flex items-center gap-1.5 group"
+            title="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-xs font-medium text-neutral-400 group-hover:text-white hidden sm:inline">
+              Back
+            </span>
+          </button>
+        ) : null}
 
-        <h1 className="font-semibold text-sm tracking-tight text-white select-none">
+        {!hideHamburger && (
+          <button
+            id="btn-hamburger-sidebar"
+            onClick={onToggleSidebar}
+            aria-label="Toggle sidebar navigation"
+            className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors focus:outline-none cursor-pointer"
+            title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+
+        <div className="h-4 w-px bg-neutral-800" />
+
+        <h1 id="header-page-title" className="font-semibold text-sm tracking-tight text-white select-none">
           {getPageTitle()}
         </h1>
       </div>
