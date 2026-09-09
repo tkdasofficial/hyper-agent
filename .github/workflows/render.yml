@@ -1,0 +1,54 @@
+name: Hyper Agent Video Render Engine
+
+on:
+  repository_dispatch:
+    types: [trigger-video-render]
+  workflow_dispatch:
+    inputs:
+      render_id:
+        description: 'Render UUID'
+        required: true
+        default: 'test-render-id'
+      prompt:
+        description: 'Prompt text'
+        required: true
+        default: 'Autonomous cyberpunk corridor with neon reflections and volumetric shadows'
+
+jobs:
+  render:
+    name: Assemble and Render 9:16 Video
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install System FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-liberation
+          ffmpeg -version
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Render Engine
+        env:
+          RENDER_ID: ${{ github.event.client_payload.render_id || github.event.inputs.render_id }}
+          PROMPT: ${{ github.event.client_payload.prompt || github.event.inputs.prompt }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PIXAZO_API_KEY: ${{ secrets.PIXAZO_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python render_engine.py
