@@ -1,0 +1,6 @@
+{
+  "name": "Hyper Agent",
+  "description": "Autonomous AI Video Agent interface featuring dynamic active canvas, generation carousel, modular config pills, automated workflows, and multi-platform integrations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
